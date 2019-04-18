@@ -2,3 +2,4 @@
 lxcat/test_data/
 lxcat.egg-info
 lxcat/__pycache__
+.vscode/
