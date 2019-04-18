@@ -1,6 +1,18 @@
 import numpy as np
 
 
+def import_lxcat_cross_sections(mypath):
+    """
+    Read a "*.txt" file containing an electron scattering cross section set downloaded from LXcat and returns the values of the cross sections in a dictionary.
+    """
+    data = {}
+    with open(mypath) as fh:
+        for fh_line in fh:
+            if 'DATABASE:' in fh_line:  # find the name of the database
+                data['database'] = fh_line[9:].strip()
+                break
+        print(data)
+
 def import_lxcat_swarm_data(mypath):
     """
     Read a "Author_Year_Parameter.txt" file containing swarm data downloaded from the lxcat data center and returns the measured parameter in a dictionary.
