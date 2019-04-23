@@ -26,13 +26,14 @@ class CrossSection:
 
 class CrossSectionSet:
     """A class containing a set of cross sections."""
+    
     def __init__(self, mypath):
         """
-        Read the "*.txt" file under 'mypath' containing an electron scattering cross section set downloaded from LXcat.
+        Read the '*.txt' file under 'mypath' containing an electron scattering cross section set downloaded from LXcat.
         """
         self.xsections = []
         cross_section_types = {xstyp.value for xstyp in CrossSectionType}
-        with open(mypath) as fh:
+        with open(mypath,'r') as fh:
             for fh_line in fh:
                 if 'DATABASE:' in fh_line:  # find the name of the database
                     self.database = fh_line[9:].strip()
@@ -52,7 +53,35 @@ class CrossSectionSet:
                                         species, energy, values)
                     self.xsections.append(xsec)
             self.species = species
-   
+
+    def write(self,mypath):
+        """
+        Writes the set of cross sections in a '*.txt' file under 'mypath', in an LXcat-compatible format.
+        """
+        with open(mypath,'w') as fh:
+            fh.write("Cross section data printed using lxcat python package, in an LXcat-compatible format (see www.lxcat.net).\n\n")
+            fh.write("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n")
+            fh.write("DATABASE: " + self.database + "\n")
+            fh.write("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n\n")
+            fh.write("**************************************************************************************************************\n")
+            for xsec in self.xsections:
+                fh.write(xsec.collision_type.value + "\n")
+                fh.write(xsec.species.split('/')[1] + "\n")
+                if xsec.collision_type.value in {'ELASTIC', 'EFFECTIVE'}:
+                    fh.write(str(xsec.mass_ratio) + "\n")
+                    paramline = "PARAM: m/M = " + str(xsec.mass_ratio) + "\n"
+                elif xsec.collision_type.value in {'EXCITATION', 'ATTACHMENT', 'IONIZATION'}:
+                    fh.write(str(xsec.threshold) + "\n")
+                    paramline = "PARAM: threshold = " + str(xsec.threshold) + "eV\n"
+                fh.write("SPECIES: " + xsec.species + "\n")
+                fh.write("PROCESS:\n")
+                fh.write(paramline)
+                fh.write("COMMENT:\n")
+                fh.write("UPDATED:\n")
+                fh.write("COLUMNS: Energy (eV) | Cross section (m2)\n")
+                fh = write_table(np.vstack((xsec.energy, xsec.values)).T, fh)  # create a 2-column table: 'energy' and 'values'
+                
+  
 
 def import_lxcat_swarm_data(mypath):
     """
@@ -91,6 +120,13 @@ def read_table(filehandle):
     table = np.array(table)
     return filehandle, table
 
+def write_table(table, filehandle):
+    """Write a multi-column table starting and ending with '---' lines."""
+    filehandle.write("-----------------------------\n")
+    for line in table:
+        print("\t".join(format(x, ".6e") for x in line), file=filehandle)
+    filehandle.write("-----------------------------\n\n")
+    return filehandle
 
 def filename_from_path(mypath):
     """
