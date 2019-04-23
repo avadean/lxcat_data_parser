@@ -1,17 +1,58 @@
 import numpy as np
+from enum import Enum
 
 
-def import_lxcat_cross_sections(mypath):
-    """
-    Read a "*.txt" file containing an electron scattering cross section set downloaded from LXcat and returns the values of the cross sections in a dictionary.
-    """
-    data = {}
-    with open(mypath) as fh:
-        for fh_line in fh:
-            if 'DATABASE:' in fh_line:  # find the name of the database
-                data['database'] = fh_line[9:].strip()
-                break
-        print(data)
+class CrossSectionType(Enum):
+    """Enumeration of the different types of cross sections"""
+    ELASTIC = 'ELASTIC'
+    EFFECTIVE = 'EFFECTIVE'
+    EXCITATION = 'EXCITATION'
+    ATTACHMENT = 'ATTACHMENT'
+    IONIZATION = 'IONIZATION'
+
+
+class CrossSection:
+    """A class containing data of a single cross section."""
+    def __init__(self, collision_type, param, species, energy, values):
+        self.collision_type = CrossSectionType(collision_type)
+        if collision_type in {'ELASTIC', 'EFFECTIVE'}:
+            self.mass_ratio = param
+        elif collision_type in {'EXCITATION', 'ATTACHMENT', 'IONIZATION'}:
+            self.threshold = param
+        self.species = species
+        self.energy = energy
+        self.values = values
+
+
+class CrossSectionSet:
+    """A class containing a set of cross sections."""
+    def __init__(self, mypath):
+        """
+        Read the "*.txt" file under 'mypath' containing an electron scattering cross section set downloaded from LXcat.
+        """
+        self.xsections = []
+        cross_section_types = {xstyp.value for xstyp in CrossSectionType}
+        with open(mypath) as fh:
+            for fh_line in fh:
+                if 'DATABASE:' in fh_line:  # find the name of the database
+                    self.database = fh_line[9:].strip()
+                    break
+            for fh_line in fh:
+                match = cross_section_types.intersection({fh_line.strip()})
+                if match:  # found a line matching one of the cross_section_types
+                    collision_type = match.pop()  # type of cross section
+                    fh.readline()
+                    # parameter of the cross section (mass_ratio or threshold)
+                    param = float(fh.readline().strip())
+                    species = fh.readline()[8:].strip()
+                    fh, table = read_table(fh)
+                    energy = table[:, 0]
+                    values = table[:, 1]
+                    xsec = CrossSection(collision_type, param,
+                                        species, energy, values)
+                    self.xsections.append(xsec)
+            self.species = species
+   
 
 def import_lxcat_swarm_data(mypath):
     """
@@ -26,21 +67,29 @@ def import_lxcat_swarm_data(mypath):
         return {}
     
     with open(mypath, 'r', encoding="utf8") as fh:
-        for fh_line in fh:
-            if '---' in fh_line:
-                break # find the first occurence of '---' start of tabulated data
-        for fh_line in fh:
-            if '---' in fh_line:
-                break
-            else:
-                s = fh_line.split()
-                data['E/N'].append(float(s[0]))
-                data[infos[2]].append(float(s[1]))
-
-    data['E/N'] = np.asarray(data['E/N'])
-    data[infos[2]] = np.asarray(data[infos[2]])
-
+        _, table = read_table(fh)
+        data['E/N'] = table[:,0]
+        data[infos[2]] = table[:,1]
     return data
+
+
+def read_table(filehandle):
+    """Read a multi-column table starting and ending with '---' lines."""
+    table = []
+    for fh_line in filehandle:
+        if '---' in fh_line:
+            break  # find the first occurence of '---': start of tabulated data
+    for fh_line in filehandle:
+        if '---' in fh_line:
+            break  # break when reaching the second occurence of '---': end of tabulated data
+        else:
+            s = fh_line.split()
+            table_line = []
+            for element in s:
+                table_line.append(float(element.strip()))
+            table.append(table_line)
+    table = np.array(table)
+    return filehandle, table
 
 
 def filename_from_path(mypath):
