@@ -13,13 +13,14 @@ class CrossSectionType(Enum):
 
 class CrossSection:
     """A class containing data of a single cross section."""
-    def __init__(self, collision_type, param, species, energy, values):
+    def __init__(self, collision_type, param, species, process, energy, values):
         self.collision_type = CrossSectionType(collision_type)
         if collision_type in {'ELASTIC', 'EFFECTIVE'}:
             self.mass_ratio = param
         elif collision_type in {'EXCITATION', 'ATTACHMENT', 'IONIZATION'}:
             self.threshold = param
         self.species = species
+        self.process = process
         self.energy = energy
         self.values = values
 
@@ -46,11 +47,12 @@ class CrossSectionSet:
                     # parameter of the cross section (mass_ratio or threshold)
                     param = float(fh.readline().strip())
                     species = fh.readline()[8:].strip()
+                    process = fh.readline()[8:].strip()
                     fh, table = read_table(fh)
                     energy = table[:, 0]
                     values = table[:, 1]
                     xsec = CrossSection(collision_type, param,
-                                        species, energy, values)
+                                        species, process, energy, values)
                     self.cross_sections.append(xsec)
             self.species = species
 
@@ -74,7 +76,7 @@ class CrossSectionSet:
                     fh.write(str(xsec.threshold) + "\n")
                     paramline = "PARAM: threshold = " + str(xsec.threshold) + "eV\n"
                 fh.write("SPECIES: " + xsec.species + "\n")
-                fh.write("PROCESS:\n")
+                fh.write("PROCESS: " + xsec.process + "\n")
                 fh.write(paramline)
                 fh.write("COMMENT:\n")
                 fh.write("UPDATED:\n")
