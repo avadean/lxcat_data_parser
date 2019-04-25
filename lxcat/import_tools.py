@@ -31,7 +31,7 @@ class CrossSectionSet:
         """
         Read the '*.txt' file under 'mypath' containing an electron scattering cross section set downloaded from LXcat.
         """
-        self.xsections = []
+        self.cross_sections = []
         cross_section_types = {xstyp.value for xstyp in CrossSectionType}
         with open(mypath,'r') as fh:
             for fh_line in fh:
@@ -51,7 +51,7 @@ class CrossSectionSet:
                     values = table[:, 1]
                     xsec = CrossSection(collision_type, param,
                                         species, energy, values)
-                    self.xsections.append(xsec)
+                    self.cross_sections.append(xsec)
             self.species = species
 
     def write(self,mypath):
@@ -64,7 +64,7 @@ class CrossSectionSet:
             fh.write("DATABASE: " + self.database + "\n")
             fh.write("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n\n")
             fh.write("**************************************************************************************************************\n")
-            for xsec in self.xsections:
+            for xsec in self.cross_sections:
                 fh.write(xsec.collision_type.value + "\n")
                 fh.write(xsec.species.split('/')[1] + "\n")
                 if xsec.collision_type.value in {'ELASTIC', 'EFFECTIVE'}:
