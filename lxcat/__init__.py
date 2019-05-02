@@ -1,1 +1,1 @@
-name = "lxcat"
+from .import_tools import *
