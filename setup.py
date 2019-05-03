@@ -13,6 +13,5 @@ setuptools.setup(
     packages=['lxcat'],
     install_requires=[
           'numpy',
-          'enum',
     ]
 )
