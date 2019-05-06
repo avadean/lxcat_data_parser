@@ -3,9 +3,6 @@ lxcat
 
 A set of tools for reading/writing data in a format compatible with the LXcat project (www.lxcat.net).
 
-Lauching simulations requires the console application 'bolsigminus.exe' available at https://www.bolsig.laplace.univ-tlse.fr/
-The configuration of Bolsig+ can be stored and loaded from a .json file. An example 'bolsigconfig.json' is provided.
-
 To load an electron scattering cross section set::
 
 	>>> import lxcat
