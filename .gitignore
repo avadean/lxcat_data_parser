@@ -4,3 +4,4 @@ lxcat.egg-info
 lxcat/__pycache__
 .vscode/
 *.pdf
+*.log

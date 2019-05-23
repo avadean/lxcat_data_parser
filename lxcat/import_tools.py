@@ -1,5 +1,7 @@
 import numpy as np
 from enum import Enum
+import logging
+import os
 
 
 class CrossSectionType(Enum):
@@ -13,48 +15,76 @@ class CrossSectionType(Enum):
 
 class CrossSection:
     """A class containing data of a single cross section."""
-    def __init__(self, collision_type, param, species, process, energy, values):
+    def __init__(self, collision_type, species, param, energy, values, **kwargs):
         self.collision_type = CrossSectionType(collision_type)
+        self.species = species
         if collision_type in {'ELASTIC', 'EFFECTIVE'}:
             self.mass_ratio = param
-        elif collision_type in {'EXCITATION', 'ATTACHMENT', 'IONIZATION'}:
+        elif collision_type in {'EXCITATION', 'IONIZATION'}:
             self.threshold = param
-        self.species = species
-        self.process = process
         self.energy = energy
         self.values = values
+        self.other_information = {}
+        for key, value in kwargs.items():
+            self.other_information[key] = value        
 
 
 class CrossSectionSet:
     """A class containing a set of cross sections."""
     
-    def __init__(self, mypath):
+    def __init__(self, mypath, imposed_species = None):
         """
-        Read the '*.txt' file under 'mypath' containing an electron scattering cross section set downloaded from LXcat.
+        Reads the first set of cross section found in the file 'mypath', or,
+        if an imposed_species is defined, reads only the cross section of that species.
+        The file should be compatible with LXcat cross section data format.
         """
+        logging.info('Initializing CrossSectionSet')
         self.cross_sections = []
+        self.database = ''
         cross_section_types = {xstyp.value for xstyp in CrossSectionType}
-        with open(mypath,'r') as fh:
-            for fh_line in fh:
-                if 'DATABASE:' in fh_line:  # find the name of the database
-                    self.database = fh_line[9:].strip()
-                    break
-            for fh_line in fh:
-                match = cross_section_types.intersection({fh_line.strip()})
-                if match:  # found a line matching one of the cross_section_types
-                    collision_type = match.pop()  # type of cross section
-                    fh.readline()
-                    # parameter of the cross section (mass_ratio or threshold)
-                    param = float(fh.readline().strip())
-                    species = fh.readline()[8:].strip()
-                    process = fh.readline()[8:].strip()
-                    fh, table = read_table(fh)
-                    energy = table[:, 0]
-                    values = table[:, 1]
-                    xsec = CrossSection(collision_type, param,
-                                        species, process, energy, values)
-                    self.cross_sections.append(xsec)
-            self.species = species
+        try:
+            with open(mypath,'r') as fh:
+                logging.info('Starting to read the contents of %s', os.path.basename(mypath))
+                fh_line = fh.readline()
+                while fh_line:
+                    if fh_line.startswith('DATABASE:'):  # find the name of the database (optional)
+                        self.database = fh_line[9:].strip()
+                    found_cross_section = cross_section_types.intersection({fh_line.strip()})
+                    if found_cross_section:  # found a line matching one of the cross_section_types
+                        collision_type = found_cross_section.pop()  # type of cross section
+                        species = fh.readline().split()[0] # species (may be followed by other text)
+                        if not imposed_species:
+                            imposed_species = species
+                        # parameter of the cross section (mass_ratio or threshold), missing for ATTACHMENT
+                        param = None
+                        if collision_type != 'ATTACHMENT':
+                            param = float(fh.readline().split()[0])
+                        # next lines are optional, additional info on the cross section:
+                        other_information = {}
+                        pos = fh.tell()
+                        line = fh.readline()
+                        while not line.startswith('-----'):
+                            s = line.split(':')
+                            key = s[0].strip()
+                            other_information[key]=line[len(key)+1:].strip()
+                            pos = fh.tell()
+                            line = fh.readline()
+                        fh.seek(pos)  # returns to previous line
+                        # read the two columm-table of energy vs cross section:
+                        fh, table = read_table(fh)
+                        energy = table[:, 0]
+                        values = table[:, 1]
+                        xsec = CrossSection(collision_type, species, param, energy, values, **other_information)
+                        if species == imposed_species:
+                            self.cross_sections.append(xsec)
+                    fh_line = fh.readline()
+                self.species = imposed_species
+                if self.cross_sections:
+                    logging.info('Finished Initializing CrossSectionSet.')
+                else:
+                    logging.error('Could not find '+imposed_species+' cross sections in '+os.path.basename(mypath))
+        except FileNotFoundError:
+            logging.error("Could not find "+mypath)        
 
     def write(self,mypath):
         """
@@ -68,19 +98,13 @@ class CrossSectionSet:
             fh.write("**************************************************************************************************************\n")
             for xsec in self.cross_sections:
                 fh.write(xsec.collision_type.value + "\n")
-                fh.write(xsec.species.split('/')[1] + "\n")
+                fh.write(xsec.species + "\n")
                 if xsec.collision_type.value in {'ELASTIC', 'EFFECTIVE'}:
                     fh.write(str(xsec.mass_ratio) + "\n")
-                    paramline = "PARAM: m/M = " + str(xsec.mass_ratio) + "\n"
-                elif xsec.collision_type.value in {'EXCITATION', 'ATTACHMENT', 'IONIZATION'}:
+                elif xsec.collision_type.value in {'EXCITATION', 'IONIZATION'}:
                     fh.write(str(xsec.threshold) + "\n")
-                    paramline = "PARAM: threshold = " + str(xsec.threshold) + "eV\n"
-                fh.write("SPECIES: " + xsec.species + "\n")
-                fh.write("PROCESS: " + xsec.process + "\n")
-                fh.write(paramline)
-                fh.write("COMMENT:\n")
-                fh.write("UPDATED:\n")
-                fh.write("COLUMNS: Energy (eV) | Cross section (m2)\n")
+                for key in xsec.other_information.keys():
+                    fh.write(key + ": " + xsec.other_information[key] + "\n")
                 fh = write_table(np.vstack((xsec.energy, xsec.values)).T, fh)  # create a 2-column table: 'energy' and 'values'
                 
   
@@ -89,7 +113,7 @@ def import_lxcat_swarm_data(mypath):
     """
     Read a "Author_Year_Parameter.txt" file containing swarm data downloaded from the lxcat data center and returns the measured parameter in a dictionary.
     """
-    filename = filename_from_path(mypath)
+    filename = os.path.basename(mypath)
     infos = filename.split('_')
     try:
         data = {'Author': infos[0], 'Year': infos[1], 'Parameter': infos[2], 'E/N': [], infos[2]: []}
@@ -105,38 +129,26 @@ def import_lxcat_swarm_data(mypath):
 
 
 def read_table(filehandle):
-    """Read a multi-column table starting and ending with '---' lines."""
+    """Read a multi-column table of floats starting and ending with '-----' lines."""
     table = []
-    for fh_line in filehandle:
-        if '---' in fh_line:
-            break  # find the first occurence of '---': start of tabulated data
-    for fh_line in filehandle:
-        if '---' in fh_line:
-            break  # break when reaching the second occurence of '---': end of tabulated data
-        else:
-            s = fh_line.split()
-            table_line = []
-            for element in s:
-                table_line.append(float(element.strip()))
-            table.append(table_line)
+    fh_line = filehandle.readline()
+    while '-----' not in fh_line:  # find the first occurence of '---': start of tabulated data
+        fh_line = filehandle.readline()
+    fh_line = filehandle.readline()
+    while '-----' not in fh_line:  # stop when reaching the second occurence of '---': end of tabulated data
+        s = fh_line.split()
+        table_line = []
+        for element in s:
+            table_line.append(float(element.strip()))
+        table.append(table_line)
+        fh_line = filehandle.readline()
     table = np.array(table)
     return filehandle, table
 
 def write_table(table, filehandle):
-    """Write a multi-column table starting and ending with '---' lines."""
+    """Write a multi-column table starting and ending with '-----' lines."""
     filehandle.write("-----------------------------\n")
     for line in table:
         print("\t".join(format(x, ".6e") for x in line), file=filehandle)
     filehandle.write("-----------------------------\n\n")
     return filehandle
-
-def filename_from_path(mypath):
-    """
-    Returns as a string the name of the file, without file extension, from the given path.
-    """
-    mypath = mypath.replace('\\','/') # in case the path is given as 'C:\\folder1\\folder2\\file.txt'
-    name = mypath.split('/')[-1] # name is something like 'file.txt'
-    name = name.split('.')[0] # remove file extension, now name is something like 'file'
-
-    return name
-
