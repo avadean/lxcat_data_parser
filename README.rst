@@ -10,8 +10,9 @@ To load an electron scattering cross section set::
 
 The loaded set can be modified and saved again (here the ELASTIC cross section is multiplied by 10)::
 
-	>>> if data.cross_sections[0].collision_type == lxcat.CrossSectionType('ELASTIC'):
-	>>>     data.cross_sections[0].values *= 10
+	>>> for cross_section in data.cross_sections:
+	>>>     if cross_section.collision_type == lxcat.CrossSectionType('ELASTIC'):
+	>>>         cross_section.values *= 10
 	>>> data.write('PATH/N2_Phelps_rescaled.txt')
 
 
