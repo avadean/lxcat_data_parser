@@ -19,7 +19,7 @@ CROSS SECTION DATA FORMAT
 -------------------------
 
 Description of the data format taken from www.lxcat.net.
-In downloaded files, each collision process is defined by a block consisting of::
+In downloaded files, each collision process is defined by a block consisting of:
 
 * 1st line: Keyword in capitals indicating the type of the collision. Possible collision types are ELASTIC, EFFECTIVE, EXCITATION, IONIZATION, or ATTACHMENT (capital letters required, key words are case sensitive), where "ELASTIC" is used to denote the elastic momentum transfer cross section and where "EFFECTIVE" denotes the total momentum transfer cross section (sum of elastic momentum transfer and total inelastic cross sections).  The latter is useful for solving the Boltzmann equation in the 2-term approximation.
 
