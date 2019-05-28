@@ -26,7 +26,30 @@ class CrossSection:
         self.values = values
         self.other_information = {}
         for key, value in kwargs.items():
-            self.other_information[key] = value        
+            self.other_information[key] = value
+
+    def __eq__(self, other):
+        if not isinstance(other,CrossSection):
+            return NotImplemented
+        if list(self.__dict__.keys()) != list(other.__dict__.keys()):
+            return False
+        if self.collision_type.value != other.collision_type.value:
+            return False
+        if self.species != other.species:
+            return False
+        if hasattr(self, 'mass_ratio'):
+            if self.mass_ratio != other.mass_ratio:
+                return False
+        elif hasattr(self, 'threshold'):
+            if self.threshold != other.threshold:
+                return False
+        if len(self.energy) != len(other.energy) or any(self.energy != other.energy):
+            return False
+        if len(self.values) != len(other.values) or any(self.values != other.values):
+            return False
+        if self.other_information != other.other_information:
+            return False
+        return True
 
 
 class CrossSectionSet:
@@ -106,8 +129,20 @@ class CrossSectionSet:
                 for key in xsec.other_information.keys():
                     fh.write(key + ": " + xsec.other_information[key] + "\n")
                 fh = write_table(np.vstack((xsec.energy, xsec.values)).T, fh)  # create a 2-column table: 'energy' and 'values'
-                
-  
+    
+    def __eq__(self, other):
+        if not isinstance(other,CrossSectionSet):
+            return NotImplemented
+        if list(self.__dict__.keys()) != list(other.__dict__.keys()):
+            return False
+        if self.database != other.database:
+            return False
+        if self.species != other.species:
+            return False
+        if self.cross_sections != other.cross_sections:
+            return False
+        return True
+
 
 def import_lxcat_swarm_data(mypath):
     """

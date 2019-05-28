@@ -20,6 +20,7 @@ def test_CrossSectionSet_output():
 	# test if the data was read correctly
 	data = CrossSectionSet('tests/test_data/N2_Phelps.txt')
 	assert data.cross_sections[0].collision_type == CrossSectionType('ELASTIC')
+	assert data.cross_sections[0] == data.cross_sections[0]
 	assert data.database == 'Phelps database'
 	assert data.cross_sections[0].species == 'N2'
 	assert data.cross_sections[0].other_information["PROCESS"] == 'E + N2 -> E + N2, Elastic'
@@ -30,3 +31,8 @@ def test_CrossSectionSet_write():
 	data.write('tests/test_data/N2_Phelps_2.txt')
 	data2 = CrossSectionSet('tests/test_data/N2_Phelps.txt')
 	assert data == data2
+
+test_CrossSectionSet_file_not_found()
+test_CrossSectionSet_species_not_found()
+test_CrossSectionSet_output()
+test_CrossSectionSet_write()
