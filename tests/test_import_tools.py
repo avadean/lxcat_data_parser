@@ -1,7 +1,9 @@
 
-from lxcat.import_tools import CrossSectionSet, CrossSectionType
+from lxcat.import_tools import CrossSectionSet, CrossSectionTypes
 import logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+
+
 
 # lxcat_swarm_data = import_lxcat_swarm_data('Z:/projects/Sparx/10_src/Python/LXcat_tools_package/lxcat/test_data/Bhalla_1960_alphaN.txt')
 # print(lxcat_swarm_data['alphaN'])
@@ -19,7 +21,7 @@ def test_CrossSectionSet_species_not_found():
 def test_CrossSectionSet_output():
 	# test if the data was read correctly
 	data = CrossSectionSet('tests/test_data/N2_Phelps.txt')
-	assert data.cross_sections[0].collision_type == CrossSectionType('ELASTIC')
+	assert data.cross_sections[0].type == 'ELASTIC'
 	assert data.cross_sections[0] == data.cross_sections[0]
 	assert data.database == 'Phelps database'
 	assert data.cross_sections[0].species == 'N2'

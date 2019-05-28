@@ -3,37 +3,42 @@ from enum import Enum
 import logging
 import os
 
-
-class CrossSectionType(Enum):
-    """Enumeration of the different types of cross sections"""
-    ELASTIC = 'ELASTIC'
-    EFFECTIVE = 'EFFECTIVE'
-    EXCITATION = 'EXCITATION'
-    ATTACHMENT = 'ATTACHMENT'
-    IONIZATION = 'IONIZATION'
+# The different types of cross sections
+CrossSectionTypes = frozenset({'ELASTIC','EFFECTIVE','EXCITATION','ATTACHMENT','IONIZATION'})
 
 
 class CrossSection:
     """A class containing data of a single cross section."""
-    def __init__(self, collision_type, species, param, energy, values, **kwargs):
-        self.collision_type = CrossSectionType(collision_type)
+    def __init__(self, cross_section_type, species, param, energy, values, **kwargs):
+        self.type = cross_section_type
         self.species = species
-        if collision_type in {'ELASTIC', 'EFFECTIVE'}:
+        if cross_section_type in {'ELASTIC', 'EFFECTIVE'}:
             self.mass_ratio = param
-        elif collision_type in {'EXCITATION', 'IONIZATION'}:
+        elif cross_section_type in {'EXCITATION', 'IONIZATION'}:
             self.threshold = param
         self.energy = energy
         self.values = values
         self.other_information = {}
         for key, value in kwargs.items():
             self.other_information[key] = value
+    
+    @property
+    def type(self):
+        return self._type
+    
+    @type.setter
+    def type(self, cross_section_type):
+        if cross_section_type in CrossSectionTypes:
+            self._type = cross_section_type
+        else:
+            raise ValueError("Cross section types other than "+str(CrossSectionTypes)+" are not permitted.")
 
     def __eq__(self, other):
         if not isinstance(other,CrossSection):
             return NotImplemented
         if list(self.__dict__.keys()) != list(other.__dict__.keys()):
             return False
-        if self.collision_type.value != other.collision_type.value:
+        if self.type != other.type:
             return False
         if self.species != other.species:
             return False
@@ -64,7 +69,6 @@ class CrossSectionSet:
         logging.info('Initializing CrossSectionSet')
         self.cross_sections = []
         self.database = ''
-        cross_section_types = {xstyp.value for xstyp in CrossSectionType}
         try:
             with open(mypath,'r') as fh:
                 logging.info('Starting to read the contents of %s', os.path.basename(mypath))
@@ -72,15 +76,15 @@ class CrossSectionSet:
                 while fh_line:
                     if fh_line.startswith('DATABASE:'):  # find the name of the database (optional)
                         self.database = fh_line[9:].strip()
-                    found_cross_section = cross_section_types.intersection({fh_line.strip()})
+                    found_cross_section = {fh_line.strip()}.intersection(CrossSectionTypes)
                     if found_cross_section:  # found a line matching one of the cross_section_types
-                        collision_type = found_cross_section.pop()  # type of cross section
+                        cross_section_type = found_cross_section.pop()  # type of cross section
                         species = fh.readline().split()[0] # species (may be followed by other text)
                         if not imposed_species:
                             imposed_species = species
                         # parameter of the cross section (mass_ratio or threshold), missing for ATTACHMENT
                         param = None
-                        if collision_type != 'ATTACHMENT':
+                        if cross_section_type != 'ATTACHMENT':
                             param = float(fh.readline().split()[0])
                         # next lines are optional, additional info on the cross section:
                         other_information = {}
@@ -97,7 +101,7 @@ class CrossSectionSet:
                         fh, table = read_table(fh)
                         energy = table[:, 0]
                         values = table[:, 1]
-                        xsec = CrossSection(collision_type, species, param, energy, values, **other_information)
+                        xsec = CrossSection(cross_section_type, species, param, energy, values, **other_information)
                         if species == imposed_species:
                             self.cross_sections.append(xsec)
                     fh_line = fh.readline()
@@ -120,11 +124,11 @@ class CrossSectionSet:
             fh.write("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n\n")
             fh.write("**************************************************************************************************************\n")
             for xsec in self.cross_sections:
-                fh.write(xsec.collision_type.value + "\n")
+                fh.write(xsec.type + "\n")
                 fh.write(xsec.species + "\n")
-                if xsec.collision_type.value in {'ELASTIC', 'EFFECTIVE'}:
+                if xsec.type in {'ELASTIC', 'EFFECTIVE'}:
                     fh.write(str(xsec.mass_ratio) + "\n")
-                elif xsec.collision_type.value in {'EXCITATION', 'IONIZATION'}:
+                elif xsec.type in {'EXCITATION', 'IONIZATION'}:
                     fh.write(str(xsec.threshold) + "\n")
                 for key in xsec.other_information.keys():
                     fh.write(key + ": " + xsec.other_information[key] + "\n")
