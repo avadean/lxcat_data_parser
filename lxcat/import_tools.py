@@ -98,7 +98,7 @@ class CrossSectionSet:
                             line = fh.readline()
                         fh.seek(pos)  # returns to previous line
                         # read the two columm-table of energy vs cross section:
-                        fh, table = read_table(fh)
+                        fh, table = DataHandler.read_table(fh)
                         energy = table[:, 0]
                         values = table[:, 1]
                         xsec = CrossSection(cross_section_type, species, param, energy, values, **other_information)
@@ -132,7 +132,7 @@ class CrossSectionSet:
                     fh.write(str(xsec.threshold) + "\n")
                 for key in xsec.other_information.keys():
                     fh.write(key + ": " + xsec.other_information[key] + "\n")
-                fh = write_table(np.vstack((xsec.energy, xsec.values)).T, fh)  # create a 2-column table: 'energy' and 'values'
+                fh = DataHandler.write_table(np.vstack((xsec.energy, xsec.values)).T, fh)  # create a 2-column table: 'energy' and 'values'
     
     def __eq__(self, other):
         if not isinstance(other,CrossSectionSet):
@@ -161,33 +161,36 @@ def import_lxcat_swarm_data(mypath):
         return {}
     
     with open(mypath, 'r', encoding="utf8") as fh:
-        _, table = read_table(fh)
+        _, table = DataHandler.read_table(fh)
         data['E/N'] = table[:,0]
         data[infos[2]] = table[:,1]
     return data
 
+class DataHandler:
 
-def read_table(filehandle):
-    """Read a multi-column table of floats starting and ending with '-----' lines."""
-    table = []
-    fh_line = filehandle.readline()
-    while '-----' not in fh_line:  # find the first occurence of '---': start of tabulated data
+    @staticmethod
+    def read_table(filehandle):
+        """Read a multi-column table of floats starting and ending with '-----' lines."""
+        table = []
         fh_line = filehandle.readline()
-    fh_line = filehandle.readline()
-    while '-----' not in fh_line:  # stop when reaching the second occurence of '---': end of tabulated data
-        s = fh_line.split()
-        table_line = []
-        for element in s:
-            table_line.append(float(element.strip()))
-        table.append(table_line)
+        while '-----' not in fh_line:  # find the first occurence of '---': start of tabulated data
+            fh_line = filehandle.readline()
         fh_line = filehandle.readline()
-    table = np.array(table)
-    return filehandle, table
+        while '-----' not in fh_line:  # stop when reaching the second occurence of '---': end of tabulated data
+            s = fh_line.split()
+            table_line = []
+            for element in s:
+                table_line.append(float(element.strip()))
+            table.append(table_line)
+            fh_line = filehandle.readline()
+        table = np.array(table)
+        return filehandle, table
 
-def write_table(table, filehandle):
-    """Write a multi-column table starting and ending with '-----' lines."""
-    filehandle.write("-----------------------------\n")
-    for line in table:
-        print("\t".join(format(x, ".6e") for x in line), file=filehandle)
-    filehandle.write("-----------------------------\n\n")
-    return filehandle
+    @staticmethod
+    def write_table(table, filehandle):
+        """Write a multi-column table starting and ending with '-----' lines."""
+        filehandle.write("-----------------------------\n")
+        for line in table:
+            print("\t".join(format(x, ".6e") for x in line), file=filehandle)
+        filehandle.write("-----------------------------\n\n")
+        return filehandle
