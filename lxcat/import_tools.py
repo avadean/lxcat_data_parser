@@ -60,69 +60,82 @@ class CrossSection:
 class CrossSectionSet:
     """A class containing a set of cross sections."""
     
-    def __init__(self, mypath, imposed_species = None):
+    def __init__(self, myfile, imposed_species = '', imposed_database = ''):
         """
-        Reads the first set of cross section found in the file 'mypath', or,
+        Reads a set of cross section from a file.
+
+        Reads the first set of cross section found in the provided file, or,
         if an imposed_species is defined, reads only the cross section of that species.
         The file should be compatible with LXcat cross section data format.
         """
-        logging.info('Initializing CrossSectionSet')
+        self.species = imposed_species
+        self.database = imposed_database
         self.cross_sections = []
-        self.database = ''
+        logging.info('Initializing CrossSectionSet')        
+        database = ''
         try:
-            with open(mypath,'r') as fh:
-                logging.info('Starting to read the contents of %s', os.path.basename(mypath))
+            with open(myfile,'r') as fh:
+                logging.info('Starting to read the contents of %s', os.path.basename(myfile))
+                cross_sections = []
                 fh_line = fh.readline()
                 while fh_line:
                     if fh_line.startswith('DATABASE:'):  # find the name of the database (optional)
-                        self.database = fh_line[9:].strip()
+                        database = fh_line[9:].strip()                        
                     found_cross_section = {fh_line.strip()}.intersection(CrossSectionTypes)
-                    if found_cross_section:  # found a line matching one of the cross_section_types
+                    if found_cross_section:  # found a line matching one of the cross_section_types                        
                         cross_section_type = found_cross_section.pop()  # type of cross section
                         species = fh.readline().split()[0] # species (may be followed by other text)
-                        if not imposed_species:
+                        if len(imposed_species) == 0:
                             imposed_species = species
-                        # parameter of the cross section (mass_ratio or threshold), missing for ATTACHMENT
-                        param = None
-                        if cross_section_type != 'ATTACHMENT':
-                            param = float(fh.readline().split()[0])
-                        # next lines are optional, additional info on the cross section:
-                        other_information = {}
-                        pos = fh.tell()
-                        line = fh.readline()
-                        while not line.startswith('-----'):
-                            s = line.split(':')
-                            key = s[0].strip()
-                            other_information[key]=line[len(key)+1:].strip()
-                            pos = fh.tell()
-                            line = fh.readline()
-                        fh.seek(pos)  # returns to previous line
-                        # read the two columm-table of energy vs cross section:
-                        fh, table = DataHandler.read_table(fh)
-                        energy = table[:, 0]
-                        values = table[:, 1]
-                        xsec = CrossSection(cross_section_type, species, param, energy, values, **other_information)
                         if species == imposed_species:
-                            self.cross_sections.append(xsec)
-                    fh_line = fh.readline()
-                self.species = imposed_species
-                if self.cross_sections:
+                            if len(imposed_database) == 0:
+                                imposed_database = database
+                            if database == imposed_database:
+                                # parameter of the cross section (mass_ratio or threshold), missing for ATTACHMENT
+                                param = None
+                                if cross_section_type != 'ATTACHMENT':
+                                    param = float(fh.readline().split()[0])
+                                # next lines are optional, additional info on the cross section:
+                                other_information = {}
+                                pos = fh.tell()
+                                line = fh.readline()
+                                while not line.startswith('-----'):
+                                    s = line.split(':')
+                                    key = s[0].strip()
+                                    other_information[key]=line[len(key)+1:].strip()
+                                    pos = fh.tell()
+                                    line = fh.readline()
+                                fh.seek(pos)  # returns to previous line
+                                # read the two columm-table of energy vs cross section:
+                                fh, table = DataHandler.read_table(fh)
+                                energy = table[:, 0]
+                                values = table[:, 1]
+                                xsec = CrossSection(cross_section_type, species, param, energy, values, **other_information)
+                                if species == imposed_species:
+                                    cross_sections.append(xsec)
+                    fh_line = fh.readline()                
+                if cross_sections:
+                    self.species = imposed_species
+                    self.database = imposed_database
+                    self.cross_sections = cross_sections
                     logging.info('Finished Initializing CrossSectionSet.')
                 else:
-                    logging.error('Could not find '+imposed_species+' cross sections in '+os.path.basename(mypath))
+                    required = ' '.join(s for s in [imposed_database, imposed_species] if s)
+                    logging.error('Could not find '+required+' cross sections in '+os.path.basename(myfile))
         except FileNotFoundError:
-            logging.error("Could not find "+mypath)        
+            logging.error("Could not find "+myfile)
 
-    def write(self,mypath):
+    def write(self,myfile):
         """
-        Writes the set of cross sections in a '*.txt' file under 'mypath', in an LXcat-compatible format.
+        Writes the set of cross sections in a '*.txt' file under 'myfile', in an LXcat-compatible format.
         """
-        with open(mypath,'w') as fh:
-            fh.write("Cross section data printed using lxcat python package, in an LXcat-compatible format (see www.lxcat.net).\n\n")
-            fh.write("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n")
+        with open(myfile,'w') as fh:
+            fh.write("""Cross section data printed using lxcat python package, 
+                        in an LXcat-compatible format (see www.lxcat.net).\n\n""")
+            fh.write("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n")
             fh.write("DATABASE: " + self.database + "\n")
-            fh.write("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n\n")
-            fh.write("**************************************************************************************************************\n")
+            fh.write("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n\n")
+            fh.write("********************************\n")
             for xsec in self.cross_sections:
                 fh.write(xsec.type + "\n")
                 fh.write(xsec.species + "\n")
@@ -148,11 +161,11 @@ class CrossSectionSet:
         return True
 
 
-def import_lxcat_swarm_data(mypath):
+def import_lxcat_swarm_data(myfile):
     """
     Read a "Author_Year_Parameter.txt" file containing swarm data downloaded from the lxcat data center and returns the measured parameter in a dictionary.
     """
-    filename = os.path.basename(mypath)
+    filename = os.path.basename(myfile)
     infos = filename.split('_')
     try:
         data = {'Author': infos[0], 'Year': infos[1], 'Parameter': infos[2], 'E/N': [], infos[2]: []}
@@ -160,7 +173,7 @@ def import_lxcat_swarm_data(mypath):
         print('Incorrect file name, please use the format "../Author_Year_Parameter.txt".')
         return {}
     
-    with open(mypath, 'r', encoding="utf8") as fh:
+    with open(myfile, 'r', encoding="utf8") as fh:
         _, table = DataHandler.read_table(fh)
         data['E/N'] = table[:,0]
         data[infos[2]] = table[:,1]
