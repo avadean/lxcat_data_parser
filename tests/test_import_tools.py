@@ -1,6 +1,7 @@
 
 from lxcat.import_tools import CrossSectionSet, CrossSectionTypes
 import logging
+import pytest
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
 
@@ -9,8 +10,8 @@ logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
 def test_CrossSectionSet_file_not_found():
 	logging.info('Test that if the file is not found, the cross section set is empty.')
-	data = CrossSectionSet('this_file_does_not_exist.txt')
-	assert data.species == '' and data.database == '' and not data.cross_sections
+	with pytest.raises(FileNotFoundError):
+		CrossSectionSet('this_file_does_not_exist.txt')
 
 def test_CrossSectionSet_species_not_found():
 	logging.info('Test that if the species is not found, the cross section set is empty.')
@@ -47,8 +48,8 @@ def test_CrossSectionSet_write():
 	data2 = CrossSectionSet('tests/test_data/N2_Phelps.txt')
 	assert data == data2
 
-test_CrossSectionSet_file_not_found()
-test_CrossSectionSet_species_not_found()
-test_CrossSectionSet_database_not_found()
-test_CrossSectionSet_output()
-test_CrossSectionSet_write()
+# test_CrossSectionSet_file_not_found()
+# test_CrossSectionSet_species_not_found()
+# test_CrossSectionSet_database_not_found()
+# test_CrossSectionSet_output()
+# test_CrossSectionSet_write()

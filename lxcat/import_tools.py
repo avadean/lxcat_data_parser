@@ -124,6 +124,7 @@ class CrossSectionSet:
                     logging.error('Could not find '+required+' cross sections in '+os.path.basename(myfile))
         except FileNotFoundError:
             logging.error("Could not find "+myfile)
+            raise
 
     def write(self,myfile):
         """

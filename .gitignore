@@ -1,8 +1,11 @@
 *pyc
-tests/test_data/
-lxcat.egg-info
-lxcat/__pycache__
-.vscode/
 *.pdf
 *.log
-tests/__pycache__
+lxcat.egg-info
+tests/test_data/
+tests/__pycache__/
+lxcat/__pycache__/
+.vscode/
+.idea/
+.venv/
+.pytest_cache/
