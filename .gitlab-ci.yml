@@ -8,5 +8,5 @@ style:
     before_script:
         - pip install flake8
     script:
-        - flake8 --max-line-length=100
+        - flake8 --ignore F401 --max-line-length=100
     allow_failure: true    

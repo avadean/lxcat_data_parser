@@ -34,8 +34,8 @@ def test_CrossSectionSet_database_not_found():
 
 
 def test_CrossSectionSet_output():
-    logging.info('Read the same dataset, with and without imposed parameters, '
-                 + 'and check equality.')
+    logging.info('''Read the same dataset, with and without imposed parameters, \
+                 'and check equality.''')
     data = CrossSectionSet('tests/test_data/N2_Phelps.txt')
     data2 = CrossSectionSet('tests/test_data/N2_Phelps.txt', imposed_species='N2',
                             imposed_database='Phelps database')

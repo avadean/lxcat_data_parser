@@ -33,8 +33,8 @@ class CrossSection:
         if cross_section_type in CrossSectionTypes:
             self._type = cross_section_type
         else:
-            raise ValueError("Cross section types other than "
-                             + str(CrossSectionTypes) + " are not permitted.")
+            raise ValueError('''Cross section types other than {} \
+                                are not permitted.'''.format(str(CrossSectionTypes)))
 
     def __eq__(self, other):
         if not isinstance(other, CrossSection):
@@ -114,7 +114,7 @@ class CrossSectionSet:
                                 while not line.startswith('-----'):
                                     s = line.split(':')
                                     key = s[0].strip()
-                                    other_information[key] = line[len(key)+1:].strip()
+                                    other_information[key] = line[len(key) + 1:].strip()
                                     pos = fh.tell()
                                     line = fh.readline()
                                 fh.seek(pos)  # returns to previous line
