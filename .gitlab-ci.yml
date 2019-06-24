@@ -1,0 +1,12 @@
+image: python:3.7-stretch
+
+stages:
+    - style 
+
+style:
+    stage: style
+    before_script:
+        - pip install flake8
+    script:
+        - flake8
+    allow_failure: true    
