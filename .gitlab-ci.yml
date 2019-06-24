@@ -18,4 +18,4 @@ tests:
         - pip install pytest
         - pip install numpy
     script:
-        - pytest
+        - python -m pytest tests/
