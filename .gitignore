@@ -2,7 +2,6 @@
 *.pdf
 *.log
 lxcat.egg-info
-tests/test_data/
 tests/__pycache__/
 lxcat/__pycache__/
 .vscode/

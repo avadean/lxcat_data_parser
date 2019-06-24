@@ -54,7 +54,7 @@ def test_CrossSectionSet_write():
     logging.info('Test that the data is correctly written, without information losses')
     data = CrossSectionSet('tests/test_data/N2_Phelps.txt')
     data.write('tests/test_data/N2_Phelps_2.txt')
-    data2 = CrossSectionSet('tests/test_data/N2_Phelps.txt')
+    data2 = CrossSectionSet('tests/test_data/N2_Phelps_2.txt')
     assert data == data2
 
 # test_CrossSectionSet_file_not_found()
