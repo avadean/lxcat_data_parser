@@ -5,13 +5,13 @@ import pytest
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
 
-def test_CrossSectionSet_file_not_found():
+def test_cross_section_set_file_not_found():
     logging.info('Test that if the file is not found, the cross section set is empty.')
     with pytest.raises(FileNotFoundError):
         CrossSectionSet('this_file_does_not_exist.txt')
 
 
-def test_CrossSectionSet_species_not_found():
+def test_cross_section_set_species_not_found():
     logging.info('Test that if the species is not found, the cross section set is empty.')
     data = CrossSectionSet('tests/test_data/N2_Phelps.txt', imposed_species='CO2')
     assert data.species == 'CO2' and data.database == '' and not data.cross_sections
@@ -21,7 +21,7 @@ def test_CrossSectionSet_species_not_found():
                not data.cross_sections])
 
 
-def test_CrossSectionSet_database_not_found():
+def test_cross_section_set_database_not_found():
     logging.info('Test that if the database is not found, the cross section set is empty.')
     data = CrossSectionSet('tests/test_data/N2_Phelps.txt',
                            imposed_database='Siglo database')
@@ -33,7 +33,7 @@ def test_CrossSectionSet_database_not_found():
                not data.cross_sections])
 
 
-def test_CrossSectionSet_output():
+def test_cross_section_set_output():
     logging.info('''Read the same dataset, with and without imposed parameters, \
                  'and check equality.''')
     data = CrossSectionSet('tests/test_data/N2_Phelps.txt')
@@ -50,15 +50,15 @@ def test_CrossSectionSet_output():
     assert data == data2
 
 
-def test_CrossSectionSet_write():
+def test_cross_section_set_write():
     logging.info('Test that the data is correctly written, without information losses')
     data = CrossSectionSet('tests/test_data/N2_Phelps.txt')
     data.write('tests/test_data/N2_Phelps_2.txt')
     data2 = CrossSectionSet('tests/test_data/N2_Phelps_2.txt')
     assert data == data2
 
-# test_CrossSectionSet_file_not_found()
-# test_CrossSectionSet_species_not_found()
-# test_CrossSectionSet_database_not_found()
-# test_CrossSectionSet_output()
-# test_CrossSectionSet_write()
+# test_cross_section_set_file_not_found()
+# test_cross_section_set_species_not_found()
+# test_cross_section_set_database_not_found()
+# test_cross_section_set_output()
+# test_cross_section_set_write()
