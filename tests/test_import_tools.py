@@ -1,5 +1,5 @@
 
-from lxcat.import_tools import CrossSectionSet
+from lxcat.import_tools import CrossSectionSet, CrossSectionTypes
 import logging
 import pytest
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -42,8 +42,8 @@ def test_cross_section_set_output():
     # test if the data is read correctly:
     assert data.database == 'Phelps database'
     assert data.species == 'N2'
-    assert data.cross_sections[0].type == 'ELASTIC'
-    assert data.cross_sections[0].other_information["PROCESS"] == 'E + N2 -> E + N2, Elastic'
+    assert data.cross_sections[0].type == CrossSectionTypes.ELASTIC
+    assert data.cross_sections[0].info["PROCESS"] == 'E + N2 -> E + N2, Elastic'
     # test the equality of first cross sections
     assert data.cross_sections[0] == data2.cross_sections[0]
     # test the equality of cross section sets

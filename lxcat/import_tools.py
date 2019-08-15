@@ -42,20 +42,29 @@ class CrossSection:
         if not isinstance(other, CrossSection):
             return NotImplemented
         if list(self.__dict__.keys()) != list(other.__dict__.keys()):
+            logging.debug('Not the same fields')
             return False
         if self.type != other.type:
+            logging.debug('Not the same type: {} vs {}.'.format(self.data, other.data))
             return False
         if self.species != other.species:
+            logging.debug('Not the same species: {} vs {}.'.format(self.type, other.type))
             return False
         if hasattr(self, 'mass_ratio'):
             if self.mass_ratio != other.mass_ratio:
+                logging.debug('Not the same mass ratio: {} vs {}.'.format(
+                    self.mass_ratio, other.mass_ratio))
                 return False
         elif hasattr(self, 'threshold'):
             if self.threshold != other.threshold:
+                logging.debug('Not the same threshold: {} vs {}.'.format(
+                    self.threshold, other.threshold))
                 return False
-        if self.data.equals(other.data):
+        if not self.data.equals(other.data):
+            logging.debug('Not the same data: {} vs {}.'.format(self.data, other.data))
             return False
         if self.info != other.info:
+            logging.debug('Not the same info: {} vs {}.'.format(self.info, other.info))
             return False
         return True
 
@@ -142,12 +151,12 @@ class CrossSectionSet:
             logging.error("Could not find {}".format(input_file))
             raise
 
-    def write(self, input_file):
+    def write(self, output_file):
         """
         Writes the set of cross sections in a '*.txt' file under 'input_file',
-        in an LXcat-compatible format.
+        in an lxcat-compatible format.
         """
-        with open(input_file, 'w') as fh:
+        with open(output_file, 'w') as fh:
             fh.write("""Cross section data printed using lxcat python package,
                         in an LXcat-compatible format (see www.lxcat.net).\n\n""")
             fh.write("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n")
@@ -155,11 +164,11 @@ class CrossSectionSet:
             fh.write("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n\n")
             fh.write("********************************\n")
             for xsec in self.cross_sections:
-                fh.write(xsec.type + "\n")
+                fh.write(xsec.type.name + "\n")
                 fh.write(xsec.species + "\n")
-                if xsec.type in {'ELASTIC', 'EFFECTIVE'}:
+                if xsec.type.name in {'ELASTIC', 'EFFECTIVE'}:
                     fh.write(str(xsec.mass_ratio) + "\n")
-                elif xsec.type in {'EXCITATION', 'IONIZATION'}:
+                elif xsec.type.name in {'EXCITATION', 'IONIZATION'}:
                     fh.write(str(xsec.threshold) + "\n")
                 for key in xsec.info.keys():
                     fh.write(key + ": " + xsec.info[key] + "\n")
@@ -211,6 +220,7 @@ class DataHandler:
         and ending with '-----' lines.
         """
         table = []
+        data_length = 0
         fh_line = file_handle.readline()
         # find the first occurrence of '---': start of tabulated data
         while '-----' not in fh_line:
@@ -218,6 +228,7 @@ class DataHandler:
         fh_line = file_handle.readline()
         # stop when reaching the second occurrence of '---': end of tabulated data
         while '-----' not in fh_line:
+            data_length += 1
             s = fh_line.split()
             table_line = []
             for element in s:
@@ -225,13 +236,14 @@ class DataHandler:
             table.append(table_line)
             fh_line = file_handle.readline()
         table = np.array(table)
+        logging.debug('Data length: {}'.format(data_length))
         return file_handle, table
 
     @staticmethod
     def write_table(table, file_handle):
         """Write a multi-column table starting and ending with '-----' lines."""
         file_handle.write("-----------------------------\n")
-        for line in table.xsec.iterrows():
-            print("\t".join(format(x, ".6e") for x in list(line)), file=file_handle)
+        table.to_csv(file_handle, sep='\t', index=False, header=False, chunksize=2,
+                     float_format='%.6e', line_terminator='\n')
         file_handle.write("-----------------------------\n\n")
         return file_handle

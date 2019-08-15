@@ -17,5 +17,6 @@ tests:
     before_script:
         - pip install pytest
         - pip install numpy
+        - pip install pandas
     script:
         - python -m pytest tests/
