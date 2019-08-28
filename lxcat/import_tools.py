@@ -1,9 +1,8 @@
-import numpy as np
 import pandas as pd
 from enum import IntEnum
-from typing import List
 import logging
 import os
+import io
 
 
 # The different types of cross sections
@@ -13,27 +12,39 @@ class CrossSectionTypes(IntEnum):
     EXCITATION = 2
     ATTACHMENT = 3
     IONIZATION = 4
-# CrossSectionTypes = frozenset({
-#     'ELASTIC', 'EFFECTIVE', 'EXCITATION', 'ATTACHMENT', 'IONIZATION'})
 
 
 CST = CrossSectionTypes
 
 
 class CrossSection:
-    """A class containing data of a single cross section."""
+    """Class containing data of a single cross section.
+
+    Attributes:
+        cross_section_type: Type of collision, possible str/member of CrossSectionTypes
+        species: name of the species as a str, example: N2
+        data: pandas DataFrame with columns 'energy' in eV and ''cross section' in m2
+        mass_ratio: ratio of electron mass to atomic/molecular mass
+        threshold: cross section threshold in eV
+        info: optional additional information on the cross section given via kwargs"""
 
     def __init__(self, cross_section_type: (str, CST), species: str,
-                 energy: List[float], values: List[float], mass_ratio: float = None,
+                 data: pd.DataFrame, mass_ratio: float = None,
                  threshold: float = None, **kwargs):
         if isinstance(cross_section_type, CST):
             self.type = cross_section_type
         else:
-            self.type = CST[cross_section_type]
+            try:
+                self.type = CST[cross_section_type]
+            except KeyError:
+                logging.error(("Invalid value of argument cross_section_type. "
+                              " Accepted values are {}").format(
+                    [xsec.name for xsec in CrossSectionTypes]))
+                raise
         self.species = species
+        self.data = data
         self.mass_ratio = mass_ratio
         self.threshold = threshold
-        self.data = pd.DataFrame({'energy': energy, 'cross section': values})
         self.info = {}
         for key, value in kwargs.items():
             self.info[key] = value
@@ -41,27 +52,23 @@ class CrossSection:
     def __eq__(self, other):
         if not isinstance(other, CrossSection):
             return NotImplemented
-        if list(self.__dict__.keys()) != list(other.__dict__.keys()):
-            logging.debug('Not the same fields')
-            return False
         if self.type != other.type:
             logging.debug('Not the same type: {} vs {}.'.format(self.data, other.data))
             return False
         if self.species != other.species:
-            logging.debug('Not the same species: {} vs {}.'.format(self.type, other.type))
+            logging.debug('Not the same species: {} vs {}.'.format(
+                self.type, other.type))
             return False
-        if hasattr(self, 'mass_ratio'):
-            if self.mass_ratio != other.mass_ratio:
-                logging.debug('Not the same mass ratio: {} vs {}.'.format(
-                    self.mass_ratio, other.mass_ratio))
-                return False
-        elif hasattr(self, 'threshold'):
-            if self.threshold != other.threshold:
-                logging.debug('Not the same threshold: {} vs {}.'.format(
-                    self.threshold, other.threshold))
-                return False
         if not self.data.equals(other.data):
             logging.debug('Not the same data: {} vs {}.'.format(self.data, other.data))
+            return False
+        if self.mass_ratio != other.mass_ratio:
+            logging.debug('Not the same mass ratio: {} vs {}.'.format(
+                self.mass_ratio, other.mass_ratio))
+            return False
+        if self.threshold != other.threshold:
+            logging.debug('Not the same threshold: {} vs {}.'.format(
+                self.threshold, other.threshold))
             return False
         if self.info != other.info:
             logging.debug('Not the same info: {} vs {}.'.format(self.info, other.info))
@@ -70,22 +77,26 @@ class CrossSection:
 
 
 class CrossSectionSet:
-    """A class containing a set of cross sections."""
+    """A class containing a set of cross sections.
 
-    def __init__(self, input_file, imposed_species='', imposed_database=''):
+    Attributes:
+        species: name of the species as a str, example: N2
+        database: name of the database
+        cross_sections: list of CrossSections"""
+
+    def __init__(self, input_file, imposed_species=None, imposed_database=None):
         """
         Reads a set of cross section from a file.
 
-        Reads the first set of cross section found in the provided file, or,
-        if an imposed_species is defined, reads only the cross section of
-        that species.
-        The file should be compatible with LXcat cross section data format.
+        By default, reads the first cross section set found in the input file but, if
+        an imposed_species and/or an imposed_database are defined, reads the first cross
+        section set of that species and/or that database found in the input file.
+        The input file should be compatible with the LXcat cross section data format.
         """
         self.species = imposed_species
         self.database = imposed_database
         self.cross_sections = []
-        logging.info('Initializing CrossSectionSet')
-        database = ''
+        current_database = None
         try:
             with open(input_file, 'r') as f:
                 logging.info('Starting to read the contents of {}'.format(
@@ -95,48 +106,59 @@ class CrossSectionSet:
                 while line:
                     # find the name of the database (optional)
                     if line.startswith('DATABASE:'):
-                        database = line[9:].strip()
-                    found_cs = [x.name for x in CrossSectionTypes
-                                if line.startswith(x.name)]
-                    # found a line matching one of the cross_section_types
+                        current_database = line[9:].strip()
+                        line = f.readline()
+                    # find a line starting with one of the cross_section_types
+                    found_cs = [x.name for x in CST if line.startswith(x.name)]
                     if found_cs:
-                        cs_type = CST[found_cs[0]]  # type of cross section
+                        # type of cross section
+                        cs_type = CST[found_cs[0]]
                         # species (may be followed by other text on the same line)
-                        species = f.readline().split()[0]
-                        if len(imposed_species) == 0:
-                            imposed_species = species
-                        if species == imposed_species:
-                            if len(imposed_database) == 0:
-                                imposed_database = database
-                            if database == imposed_database:
-                                # parameter of the cross section (mass_ratio
-                                # or threshold), missing for ATTACHMENT
+                        line = f.readline()
+                        current_species = line.split()[0]
+                        if imposed_species is None:
+                            imposed_species = current_species
+                        # if this is the right species, proceed
+                        if current_species == imposed_species:
+                            if imposed_database is None:
+                                imposed_database = current_database
+                            # if this is the right database, proceed
+                            if current_database == imposed_database:
+                                # depending on the type of cross section, the next line
+                                # contains either the mass_ratio or the threshold
                                 mass_ratio = None
                                 threshold = None
                                 if cs_type == CST.EFFECTIVE or cs_type == CST.ELASTIC:
                                     mass_ratio = float(f.readline().split()[0])
-                                elif cs_type == CST.EXCITATION or cs_type.IONIZATION:
+                                elif (cs_type == CST.EXCITATION
+                                      or cs_type == CST.IONIZATION):
                                     threshold = float(f.readline().split()[0])
-                                # next lines are optional (additional info
-                                # on the cross section):
+                                # the next lines may contain optional, additional
+                                # information on the cross section with the format
+                                # KEY: information
                                 other_info = {}
-                                pos = f.tell()
                                 line = f.readline()
                                 while not line.startswith('-----'):
                                     s = line.split(':')
                                     key = s[0].strip()
                                     other_info[key] = line[len(key) + 1:].strip()
-                                    pos = f.tell()
                                     line = f.readline()
-                                f.seek(pos)  # returns to previous line
-                                # read the two column-table of energy vs cross section:
-                                f, table = DataHandler.read_table(f)
-                                energy = table[:, 0]
-                                values = table[:, 1]
-                                xsec = CrossSection(cs_type, species, energy, values,
+                                # '-----' mars the start of the tabulated data
+                                # put the data into an ioString
+                                data_stream = io.StringIO()
+                                line = f.readline()
+                                while not line.startswith('-----'):
+                                    data_stream.write(line)
+                                    line = f.readline()
+                                data_stream.seek(0)
+                                # '-----' marks the end of the tabulated data
+                                # read the data into a pandas DataFrame
+                                data = pd.read_csv(data_stream, sep='\t',
+                                                   names=['energy', 'cross section'])
+                                # create the cross section object with all the info
+                                xsec = CrossSection(cs_type, current_species, data,
                                                     mass_ratio, threshold, **other_info)
-                                if species == imposed_species:
-                                    cross_sections.append(xsec)
+                                cross_sections.append(xsec)
                     line = f.readline()
                 if cross_sections:
                     self.species = imposed_species
@@ -144,7 +166,8 @@ class CrossSectionSet:
                     self.cross_sections = cross_sections
                     logging.info('Finished Initializing CrossSectionSet.')
                 else:
-                    required = ' '.join(s for s in [imposed_database, imposed_species] if s)
+                    required = ' '.join(s for s in [imposed_database, imposed_species]
+                                        if s is not None)
                     logging.error('Could not find {} cross sections in {}'.format(
                         required, os.path.basename(input_file)))
         except FileNotFoundError:
@@ -157,11 +180,12 @@ class CrossSectionSet:
         in an lxcat-compatible format.
         """
         with open(output_file, 'w') as fh:
-            fh.write("""Cross section data printed using lxcat python package,
-                        in an LXcat-compatible format (see www.lxcat.net).\n\n""")
+            fh.write("Cross section data printed using lxcat python package, "
+                     "in an LXcat-compatible format (see www.lxcat.net).\n\n")
             fh.write("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n")
-            fh.write("DATABASE: " + self.database + "\n")
-            fh.write("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n\n")
+            if self.database is not None:
+                fh.write("DATABASE: " + self.database + "\n")
+                fh.write("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n\n")
             fh.write("********************************\n")
             for xsec in self.cross_sections:
                 fh.write(xsec.type.name + "\n")
@@ -173,20 +197,28 @@ class CrossSectionSet:
                 for key in xsec.info.keys():
                     fh.write(key + ": " + xsec.info[key] + "\n")
                 # create a 2-column table: 'energy' and 'values'
-                fh = DataHandler.write_table(xsec.data, fh)
+                fh.write("-----------------------------\n")
+                xsec.data.to_csv(fh, sep='\t', index=False, header=False, chunksize=2,
+                                 float_format='%.6e', line_terminator='\n')
+                fh.write("-----------------------------\n\n")
+            fh.write("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n")
 
     def __eq__(self, other):
         if not isinstance(other, CrossSectionSet):
             return NotImplemented
-        if list(self.__dict__.keys()) != list(other.__dict__.keys()):
-            return False
         if self.database != other.database:
             return False
         if self.species != other.species:
             return False
-        if self.cross_sections != other.cross_sections:
-            return False
-        return True
+        # check that the cross sections are identical (order may vary) by removing them
+        # one by one and checking that the remaining list is then empty
+        other_xsecs = list(other.cross_sections)
+        for xsec in self.cross_sections:
+            try:
+                other_xsecs.remove(xsec)
+            except ValueError:
+                return False
+        return not other_xsecs
 
 
 def import_lxcat_swarm_data(input_file):
@@ -209,41 +241,3 @@ def import_lxcat_swarm_data(input_file):
         data['E/N'] = table[:, 0]
         data[infos[2]] = table[:, 1]
     return data
-
-
-class DataHandler:
-
-    @staticmethod
-    def read_table(file_handle):
-        """
-        Read a multi-column table of floats starting
-        and ending with '-----' lines.
-        """
-        table = []
-        data_length = 0
-        fh_line = file_handle.readline()
-        # find the first occurrence of '---': start of tabulated data
-        while '-----' not in fh_line:
-            fh_line = file_handle.readline()
-        fh_line = file_handle.readline()
-        # stop when reaching the second occurrence of '---': end of tabulated data
-        while '-----' not in fh_line:
-            data_length += 1
-            s = fh_line.split()
-            table_line = []
-            for element in s:
-                table_line.append(float(element.strip()))
-            table.append(table_line)
-            fh_line = file_handle.readline()
-        table = np.array(table)
-        logging.debug('Data length: {}'.format(data_length))
-        return file_handle, table
-
-    @staticmethod
-    def write_table(table, file_handle):
-        """Write a multi-column table starting and ending with '-----' lines."""
-        file_handle.write("-----------------------------\n")
-        table.to_csv(file_handle, sep='\t', index=False, header=False, chunksize=2,
-                     float_format='%.6e', line_terminator='\n')
-        file_handle.write("-----------------------------\n\n")
-        return file_handle

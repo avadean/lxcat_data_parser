@@ -1,5 +1,4 @@
-Cross section data printed using lxcat python package,
-                        in an LXcat-compatible format (see www.lxcat.net).
+Cross section data printed using lxcat python package, in an LXcat-compatible format (see www.lxcat.net).
 
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 DATABASE: Phelps database
@@ -40,7 +39,7 @@ COLUMNS: Energy (eV) | Cross section (m2)
 1.818383e+00	1.651500e-19
 1.917427e+00	1.893000e-19
 2.019952e+00	1.828100e-19
-2.126079e+00	2.016900e-19
+2.126079e+00	3.016900e-19
 2.235937e+00	2.377500e-19
 2.349654e+00	1.930600e-19
 2.467369e+00	2.508800e-19
@@ -1006,3 +1005,4 @@ COLUMNS: Energy (eV) | Cross section (m2)
 1.000000e+04	1.040000e-22
 -----------------------------
 
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

@@ -16,7 +16,7 @@ setuptools.setup(
     ],
     packages=['lxcat'],
     install_requires=[
-        'numpy',
+        'pandas'
     ],
     license="GNU General Public License v3",
     url="https://gitlab.ethz.ch/alisec/lxcat_package/",
