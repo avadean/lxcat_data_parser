@@ -130,8 +130,8 @@ class CrossSectionSet:
                                 threshold = None
                                 if cs_type == CST.EFFECTIVE or cs_type == CST.ELASTIC:
                                     mass_ratio = float(f.readline().split()[0])
-                                elif (cs_type == CST.EXCITATION
-                                      or cs_type == CST.IONIZATION):
+                                elif (cs_type == CST.EXCITATION or
+                                      cs_type == CST.IONIZATION):
                                     threshold = float(f.readline().split()[0])
                                 # the next lines may contain optional, additional
                                 # information on the cross section with the format
@@ -219,25 +219,3 @@ class CrossSectionSet:
             except ValueError:
                 return False
         return not other_xsecs
-
-
-def import_lxcat_swarm_data(input_file):
-    """
-    Read a "Author_Year_Parameter.txt" file containing swarm data
-    downloaded from the lxcat data center and returns
-    the measured parameter in a dictionary.
-    """
-    filename = os.path.basename(input_file)
-    infos = filename.split('_')
-    try:
-        data = {'Author': infos[0], 'Year': infos[1], 'Parameter': infos[2],
-                'E/N': [], infos[2]: []}
-    except IndexError:
-        print('Incorrect file name, please use the format "../Author_Year_Parameter.txt".')
-        return {}
-
-    with open(input_file, 'r', encoding="utf8") as fh:
-        _, table = DataHandler.read_table(fh)
-        data['E/N'] = table[:, 0]
-        data[infos[2]] = table[:, 1]
-    return data

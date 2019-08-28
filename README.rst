@@ -12,7 +12,7 @@ The loaded set can be modified and saved again (here the ELASTIC cross section i
 
 	>>> for cross_section in data.cross_sections:
 	>>>     if cross_section.collision_type == lxcat.CrossSectionType('ELASTIC'):
-	>>>         cross_section.values *= 10
+	>>>         cross_section.data['cross section'] *= 10
 	>>> data.write('PATH/N2_Phelps_rescaled.txt')
 
 
