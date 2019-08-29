@@ -137,8 +137,8 @@ class CrossSectionSet:
                                 threshold = None
                                 if cs_type == CST.EFFECTIVE or cs_type == CST.ELASTIC:
                                     mass_ratio = float(f.readline().split()[0])
-                                elif (cs_type == CST.EXCITATION or
-                                      cs_type == CST.IONIZATION):
+                                elif any([cs_type == CST.EXCITATION,
+                                          cs_type == CST.IONIZATION]):
                                     threshold = float(f.readline().split()[0])
                                 # the next lines may contain optional, additional
                                 # information on the cross section with the format

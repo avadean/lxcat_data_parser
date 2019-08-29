@@ -31,8 +31,3 @@ In downloaded files, each collision process is defined by a block consisting of:
 * from 4th line (optionally): User comments and reference information, maximum 100 lines. The only constraint on format is that these comment lines must not start with a number.
 
 * Finally: Table of the cross section as a function of energy. The table starts and ends by a line of dashes "------" (at least 5), and has otherwise two numbers per line: the energy in eV and the cross section in m2.
-
-SWARM DATA FORMAT
------------------
-
-Not supported yet.
