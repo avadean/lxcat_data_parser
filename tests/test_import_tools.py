@@ -1,5 +1,5 @@
 
-from lxcat import CrossSectionSet, CrossSectionTypes
+from lxcat import CrossSectionSet, CrossSectionTypes, CrossSectionReadingError
 import logging
 import pytest
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -13,24 +13,21 @@ def test_cross_section_set_file_not_found():
 
 def test_cross_section_set_species_not_found():
     # Test that if the species is not found, the cross section set is empty.
-    data = CrossSectionSet('tests/test_data/N2_Phelps.txt', imposed_species='CO2')
-    assert data.species == 'CO2' and data.database is None and not data.cross_sections
-    data = CrossSectionSet('tests/test_data/N2_Phelps.txt', imposed_species='CO2',
-                           imposed_database='Phelps database')
-    assert all([data.species == 'CO2', data.database == 'Phelps database',
-               not data.cross_sections])
+    with pytest.raises(CrossSectionReadingError):
+        CrossSectionSet('tests/test_data/N2_Phelps.txt', imposed_species='CO2')
+    with pytest.raises(CrossSectionReadingError):
+        CrossSectionSet('tests/test_data/N2_Phelps.txt', imposed_species='CO2',
+                        imposed_database='Phelps database')
 
 
 def test_cross_section_set_database_not_found():
     # Test that if the database is not found, the cross section set is empty.
-    data = CrossSectionSet('tests/test_data/N2_Phelps.txt',
-                           imposed_database='Siglo database')
-    assert all([data.species is None, data.database == 'Siglo database',
-               not data.cross_sections])
-    data = CrossSectionSet('tests/test_data/N2_Phelps.txt', imposed_species='N2',
-                           imposed_database='Siglo database')
-    assert all([data.species == 'N2', data.database == 'Siglo database',
-               not data.cross_sections])
+    with pytest.raises(CrossSectionReadingError):
+        CrossSectionSet('tests/test_data/N2_Phelps.txt',
+                        imposed_database='Siglo database')
+    with pytest.raises(CrossSectionReadingError):
+        CrossSectionSet('tests/test_data/N2_Phelps.txt', imposed_species='N2',
+                        imposed_database='Siglo database')
 
 
 def test_cross_section_set_output():

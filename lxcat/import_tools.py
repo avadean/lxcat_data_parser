@@ -52,7 +52,7 @@ class CrossSection:
     def __repr__(self):
         if self.threshold is not None:
             return "{} {} CrossSection at {} eV".format(self.species, self.type.name,
-                                                         self.threshold)
+                                                        self.threshold)
         else:
             return "{} {} CrossSection".format(self.species, self.type.name)
 
@@ -110,7 +110,6 @@ class CrossSectionSet:
                 logging.info('Starting to read the contents of {}'.format(
                     os.path.basename(input_file)))
                 current_database = None
-                cross_sections = []
                 line = f.readline()
                 while line:
                     # find the name of the database (optional)
