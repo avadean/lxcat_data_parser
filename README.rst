@@ -6,14 +6,14 @@ A set of tools for reading/writing data in a format compatible with the LXcat pr
 To load an electron scattering cross section set::
 
 	>>> import lxcat
-	>>> data = lxcat.CrossSectionSet('PATH/N2_Phelps.txt')
+	>>> data = lxcat.CrossSectionSet('N2_Phelps.txt')
 
 The loaded set can be modified and saved again (here the ELASTIC cross section is multiplied by 10)::
 
 	>>> for cross_section in data.cross_sections:
-	>>>     if cross_section.collision_type == lxcat.CrossSectionType('ELASTIC'):
+	>>>     if cross_section.type == lxcat.CrossSectionTypes.ELASTIC:
 	>>>         cross_section.data['cross section'] *= 10
-	>>> data.write('PATH/N2_Phelps_rescaled.txt')
+	>>> data.write('N2_Phelps_rescaled.txt')
 
 
 CROSS SECTION DATA FORMAT

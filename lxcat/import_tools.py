@@ -49,6 +49,13 @@ class CrossSection:
         for key, value in kwargs.items():
             self.info[key] = value
 
+    def __repr__(self):
+        if self.threshold is not None:
+            return "{} {} cross section at {} eV".format(self.species, self.type.name,
+                                                         self.threshold)
+        else:
+            return "{} {} cross section".format(self.species, self.type.name)
+
     def __eq__(self, other):
         if not isinstance(other, CrossSection):
             return NotImplemented
@@ -173,6 +180,15 @@ class CrossSectionSet:
         except FileNotFoundError:
             logging.error("Could not find {}".format(input_file))
             raise
+
+    def __repr__(self):
+        if not self.cross_sections:
+            return "Empty CrossSectionSet"
+        else:
+            if self.database is not None:
+                return "{} {} CrossSectionSet".format(self.database, self.species)
+            else:
+                return "{} CrossSectionSet".format(self.species)
 
     def write(self, output_file):
         """
