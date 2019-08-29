@@ -51,10 +51,10 @@ class CrossSection:
 
     def __repr__(self):
         if self.threshold is not None:
-            return "{} {} cross section at {} eV".format(self.species, self.type.name,
+            return "{} {} CrossSection at {} eV".format(self.species, self.type.name,
                                                          self.threshold)
         else:
-            return "{} {} cross section".format(self.species, self.type.name)
+            return "{} {} CrossSection".format(self.species, self.type.name)
 
     def __eq__(self, other):
         if not isinstance(other, CrossSection):
@@ -91,7 +91,7 @@ class CrossSectionSet:
         database: name of the database
         cross_sections: list of CrossSections"""
 
-    def __init__(self, input_file, imposed_species=None, imposed_database=None):
+    def __init__(self, input_file=None, imposed_species=None, imposed_database=None):
         """
         Reads a set of cross section from a file.
 
@@ -100,14 +100,16 @@ class CrossSectionSet:
         section set of that species and/or that database found in the input file.
         The input file should be compatible with the LXcat cross section data format.
         """
+
         self.species = imposed_species
         self.database = imposed_database
         self.cross_sections = []
-        current_database = None
-        try:
+
+        if input_file is not None:
             with open(input_file, 'r') as f:
                 logging.info('Starting to read the contents of {}'.format(
                     os.path.basename(input_file)))
+                current_database = None
                 cross_sections = []
                 line = f.readline()
                 while line:
@@ -123,14 +125,14 @@ class CrossSectionSet:
                         # species (may be followed by other text on the same line)
                         line = f.readline()
                         current_species = line.split()[0]
-                        if imposed_species is None:
-                            imposed_species = current_species
+                        if self.species is None:
+                            self.species = current_species
                         # if this is the right species, proceed
-                        if current_species == imposed_species:
-                            if imposed_database is None:
-                                imposed_database = current_database
+                        if current_species == self.species:
+                            if self.database is None:
+                                self.database = current_database
                             # if this is the right database, proceed
-                            if current_database == imposed_database:
+                            if current_database == self.database:
                                 # depending on the type of cross section, the next line
                                 # contains either the mass_ratio or the threshold
                                 mass_ratio = None
@@ -165,30 +167,28 @@ class CrossSectionSet:
                                 # create the cross section object with all the info
                                 xsec = CrossSection(cs_type, current_species, data,
                                                     mass_ratio, threshold, **other_info)
-                                cross_sections.append(xsec)
+                                self.cross_sections.append(xsec)
                     line = f.readline()
-                if cross_sections:
-                    self.species = imposed_species
-                    self.database = imposed_database
-                    self.cross_sections = cross_sections
-                    logging.info('Finished Initializing CrossSectionSet.')
+                if self.cross_sections:
+                    logging.info('Initialized ' + str(self))
                 else:
                     required = ' '.join(s for s in [imposed_database, imposed_species]
                                         if s is not None)
                     logging.error('Could not find {} cross sections in {}'.format(
                         required, os.path.basename(input_file)))
-        except FileNotFoundError:
-            logging.error("Could not find {}".format(input_file))
-            raise
+                    raise CrossSectionReadingError
+        else:
+            logging.info('Initialized ' + str(self))
 
     def __repr__(self):
-        if not self.cross_sections:
-            return "Empty CrossSectionSet"
+        if self.database is not None and self.species is not None:
+            return "{} {} CrossSectionSet".format(self.database, self.species)
+        elif self.database is not None:
+            return "{} CrossSectionSet".format(self.database)
+        elif self.species is not None:
+            return "{} CrossSectionSet".format(self.species)
         else:
-            if self.database is not None:
-                return "{} {} CrossSectionSet".format(self.database, self.species)
-            else:
-                return "{} CrossSectionSet".format(self.species)
+            return "Empty CrossSectionSet"
 
     def write(self, output_file):
         """
@@ -235,3 +235,11 @@ class CrossSectionSet:
             except ValueError:
                 return False
         return not other_xsecs
+
+
+class CrossSectionReadingError(Exception):
+    """
+    Error indicating a problem with the input file content. Check that the file
+    follows the LXcat cross section data format (see www.lxcat.net), and that the
+    species and/or database names are correct.
+    """
