@@ -5,7 +5,7 @@ with open('README.rst') as readme_file:
 
 setuptools.setup(
     name="hvl_lxcat_parser",
-    version="0.0.2",
+    version="0.0.1",
     author="Alise Chachereau",
     author_email="alisec@ethz.ch",
     description="A set of tools for importing data from the LXcat project.",
