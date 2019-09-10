@@ -19,7 +19,7 @@ setuptools.setup(
         'pandas'
     ],
     license="GNU General Public License v3",
-    url="https://gitlab.ethz.ch/alisec/lxcat/",
+    url="https://gitlab.ethz.ch/alisec/hvl_lxcat_parser/",
     test_suite='tests',
     tests_require=['pytest', ],
 )
