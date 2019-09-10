@@ -195,8 +195,9 @@ class CrossSectionSet:
         in an lxcat-compatible format.
         """
         with open(output_file, 'w') as fh:
-            fh.write("Cross section data printed using lxcat python package, "
-                     "in an LXcat-compatible format (see www.lxcat.net).\n\n")
+            fh.write("Data printed using the package 'hvl_lxcat_parser', formatted "
+                     " in accordance with the cross section data format of LXCat, "
+                     "www.lxcat.net.\n\n")
             fh.write("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n")
             if self.database is not None:
                 fh.write("DATABASE: " + self.database + "\n")

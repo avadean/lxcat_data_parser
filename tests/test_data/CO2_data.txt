@@ -1,0 +1,52 @@
+Dummy data to test the package 'hvl_lxcat_parser', formatted in accordance with the cross section data format of LXCat, www.lxcat.net
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+DATABASE: Dummy database
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+********************************
+
+ELASTIC
+CO2
+1.24e-5
+PROCESS: Elastic collision
+COLUMNS: Energy (eV) | Cross section (m2)
+-----------------------------
+ 1.000000e+0	1.000000e-20
+ 2.000000e+0	2.000000e-20
+ 3.000000e+0	3.000000e-20
+-----------------------------
+
+EXCITATION
+CO2
+0.083
+PROCESS: Vibrational excitation
+COLUMNS: Energy (eV) | Cross section (m2)
+-----------------------------
+ 1.000000e+0	1.000000e-20
+ 2.000000e+0	2.000000e-20
+ 3.000000e+0	3.000000e-20
+-----------------------------
+
+IONIZATION
+CO2
+13.3
+PROCESS: Ionization
+COLUMNS: Energy (eV) | Cross section (m2)
+-----------------------------
+ 1.000000e+0	1.000000e-20
+ 2.000000e+0	2.000000e-20
+ 3.000000e+0	3.000000e-20
+-----------------------------
+
+ATTACHMENT
+CO2
+PROCESS: Dissociative electron attachment
+COLUMNS: Energy (eV) | Cross section (m2)
+-----------------------------
+ 1.000000e+0	1.000000e-20
+ 2.000000e+0	2.000000e-20
+ 3.000000e+0	3.000000e-20
+-----------------------------
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

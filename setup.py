@@ -4,8 +4,8 @@ with open('README.rst') as readme_file:
     readme = readme_file.read()
 
 setuptools.setup(
-    name="lxcat",
-    version="0.0.1",
+    name="hvl_lxcat_parser",
+    version="0.0.2",
     author="Alise Chachereau",
     author_email="alisec@ethz.ch",
     description="A set of tools for importing data from the LXcat project.",
@@ -14,7 +14,7 @@ setuptools.setup(
         'Programming Language :: Python :: 3.7',
         'Topic :: Scientific/Engineering :: Physics'
     ],
-    packages=['lxcat'],
+    packages=['hvl_lxcat_parser'],
     install_requires=[
         'pandas'
     ],
