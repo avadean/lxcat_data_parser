@@ -1,9 +1,9 @@
 *pyc
 *.pdf
 *.log
-lxcat.egg-info
+hvl_lxcat_parser.egg-info
 tests/__pycache__/
-lxcat/__pycache__/
+hvl_lxcat_parser/__pycache__/
 .vscode/
 .idea/
 .venv/
