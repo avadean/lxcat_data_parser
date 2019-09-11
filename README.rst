@@ -1,5 +1,5 @@
 hvl_lxcat_parser
-------
+----------------
 
 A set of tools developed at the High Voltage Lab (HVL) of ETH Zurich, for reading/writing electron scattering cross sections data, in a format compatible with the LXcat project (www.lxcat.net).
 
