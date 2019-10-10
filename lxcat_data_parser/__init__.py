@@ -1,2 +1,6 @@
-from .import_tools import CrossSectionTypes, CrossSection, CrossSectionSet, \
-    CrossSectionReadingError
+from .import_tools import (  # noqa: F401
+    CrossSectionTypes,
+    CrossSection,
+    CrossSectionSet,
+    CrossSectionReadingError,
+)
