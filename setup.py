@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-with open('README.rst') as readme_file:
+with open("README.rst") as readme_file:
     readme = readme_file.read()
 
 setup(
@@ -11,15 +11,15 @@ setup(
     description="A set of tools for importing data from the LXcat project.",
     long_description=readme,
     classifiers=[
-        'Programming Language :: Python :: 3.7',
-        'Topic :: Scientific/Engineering :: Physics'
+        "Programming Language :: Python :: 3.7",
+        "Topic :: Scientific/Engineering :: Physics"
     ],
     packages=find_packages(),
     install_requires=[
-        'pandas'
+        "pandas"
     ],
     license="GNU General Public License v3",
     url="https://gitlab.com/ethz_hvl/lxcat_data_parser/",
-    test_suite='tests',
-    tests_require=['pytest', ],
+    test_suite="tests",
+    tests_require=["pytest", ],
 )

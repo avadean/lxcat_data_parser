@@ -24,7 +24,7 @@ class CrossSection:
     Attributes:
         cross_section_type: Type of collision, possible str/member of CrossSectionTypes
         species: name of the species as a str, example: N2
-        data: pandas DataFrame with columns 'energy' in eV and 'cross section' in m2
+        data: pandas DataFrame with columns "energy" in eV and "cross section" in m2
         mass_ratio: ratio of electron mass to atomic/molecular mass
         threshold: cross section threshold in eV
         info: optional additional information on the cross section given via kwargs"""
@@ -38,9 +38,9 @@ class CrossSection:
             try:
                 self.type = CST[cross_section_type]
             except KeyError:
-                logging.error(("Invalid value of argument cross_section_type. "
-                              " Accepted values are {}").format(
-                    [xsec.name for xsec in CrossSectionTypes]))
+                names = ",".join([xsec.name for xsec in CrossSectionTypes])
+                logging.error(f"Invalid value of argument cross_section_type. "
+                              f" Accepted values are: {names}")
                 raise
         self.species = species
         self.data = data
@@ -52,34 +52,34 @@ class CrossSection:
 
     def __repr__(self):
         if self.threshold is not None:
-            return "{} {} CrossSection at {} eV".format(self.species, self.type.name,
-                                                        self.threshold)
+            name = (f"{self.species} {self.type.name} CrossSection "
+                    f"at {self.threshold} eV")
+            return name
         else:
-            return "{} {} CrossSection".format(self.species, self.type.name)
+            return f"{self.species} {self.type.name} CrossSection"
 
     def __eq__(self, other):
         if not isinstance(other, CrossSection):
             return NotImplemented
         if self.type != other.type:
-            logging.debug('Not the same type: {} vs {}.'.format(self.data, other.data))
+            logging.debug(f"Not the same type: {self.type.name} vs {other.type.name}.")
             return False
         if self.species != other.species:
-            logging.debug('Not the same species: {} vs {}.'.format(
-                self.type, other.type))
+            logging.debug(f"Not the same species: {self.species} vs {other.species}.")
             return False
         if not self.data.equals(other.data):
-            logging.debug('Not the same data: {} vs {}.'.format(self.data, other.data))
+            logging.debug("Not the same data.")
             return False
         if self.mass_ratio != other.mass_ratio:
-            logging.debug('Not the same mass ratio: {} vs {}.'.format(
-                self.mass_ratio, other.mass_ratio))
+            logging.debug(f"Not the same mass ratio: {self.mass_ratio} vs "
+                          f"{other.mass_ratio}.")
             return False
         if self.threshold != other.threshold:
-            logging.debug('Not the same threshold: {} vs {}.'.format(
-                self.threshold, other.threshold))
+            logging.debug(f"Not the same threshold: {self.threshold} vs "
+                          f"{other.threshold}.")
             return False
         if self.info != other.info:
-            logging.debug('Not the same info: {} vs {}.'.format(self.info, other.info))
+            logging.debug(f"Not the same info: {self.info} vs {other.info}.")
             return False
         return True
 
@@ -107,14 +107,14 @@ class CrossSectionSet:
         self.cross_sections = []
 
         if input_file is not None:
-            with open(input_file, 'r') as f:
-                logging.info('Starting to read the contents of {}'.format(
-                    os.path.basename(input_file)))
+            with open(input_file, "r") as f:
+                logging.info(f"Starting to read the contents "
+                             f"of {os.path.basename(input_file)}")
                 current_database = None
                 line = f.readline()
                 while line:
                     # find the name of the database (optional)
-                    if line.startswith('DATABASE:'):
+                    if line.startswith("DATABASE:"):
                         current_database = line[9:].strip()
                         line = f.readline()
                     # find a line starting with one of the cross_section_types
@@ -147,56 +147,56 @@ class CrossSectionSet:
                                 # KEY: information
                                 other_info = {}
                                 line = f.readline()
-                                while not line.startswith('-----'):
-                                    s = line.split(':')
+                                while not line.startswith("-----"):
+                                    s = line.split(":")
                                     key = s[0].strip()
                                     other_info[key] = line[len(key) + 1:].strip()
                                     line = f.readline()
-                                # '-----' mars the start of the tabulated data
+                                # "-----" mars the start of the tabulated data
                                 # put the data into an ioString
                                 data_stream = io.StringIO()
                                 line = f.readline()
-                                while not line.startswith('-----'):
+                                while not line.startswith("-----"):
                                     data_stream.write(line)
                                     line = f.readline()
                                 data_stream.seek(0)
-                                # '-----' marks the end of the tabulated data
+                                # "-----" marks the end of the tabulated data
                                 # read the data into a pandas DataFrame
-                                data = pd.read_csv(data_stream, sep='\t',
-                                                   names=['energy', 'cross section'])
+                                data = pd.read_csv(data_stream, sep="\t",
+                                                   names=["energy", "cross section"])
                                 # create the cross section object with all the info
                                 xsec = CrossSection(cs_type, current_species, data,
                                                     mass_ratio, threshold, **other_info)
                                 self.cross_sections.append(xsec)
                     line = f.readline()
                 if self.cross_sections:
-                    logging.info('Initialized ' + str(self))
+                    logging.info(f"Initialized {self}")
                 else:
-                    required = ' '.join(s for s in [imposed_database, imposed_species]
+                    required = " ".join(s for s in [imposed_database, imposed_species]
                                         if s is not None)
-                    logging.error('Could not find {} cross sections in {}'.format(
-                        required, os.path.basename(input_file)))
+                    logging.error(f"Could not find {required} cross sections "
+                                  f"in {os.path.basename(input_file)}")
                     raise CrossSectionReadingError
         else:
-            logging.info('Initialized ' + str(self))
+            logging.info(f"Initialized {self}")
 
     def __repr__(self):
         if self.database is not None and self.species is not None:
-            return "{} {} CrossSectionSet".format(self.database, self.species)
+            return f"{self.database} {self.species} CrossSectionSet"
         elif self.database is not None:
-            return "{} CrossSectionSet".format(self.database)
+            return f"{self.database} CrossSectionSet"
         elif self.species is not None:
-            return "{} CrossSectionSet".format(self.species)
+            return f"{self.species} CrossSectionSet"
         else:
             return "Empty CrossSectionSet"
 
     def write(self, output_file):
         """
-        Writes the set of cross sections in a '*.txt' file under 'input_file',
+        Writes the set of cross sections in a "*.txt" file under "input_file",
         in an lxcat-compatible format.
         """
-        with open(output_file, 'w') as fh:
-            fh.write("Data printed using the package 'hvl_lxcat_parser', formatted "
+        with open(output_file, "w") as fh:
+            fh.write("Data printed using the package 'lxcat_data_parser', formatted "
                      " in accordance with the cross section data format of LXCat, "
                      "www.lxcat.net.\n\n")
             fh.write("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n")
@@ -207,16 +207,16 @@ class CrossSectionSet:
             for xsec in self.cross_sections:
                 fh.write(xsec.type.name + "\n")
                 fh.write(xsec.species + "\n")
-                if xsec.type.name in {'ELASTIC', 'EFFECTIVE'}:
+                if xsec.type in {CST.ELASTIC, CST.EFFECTIVE}:
                     fh.write(str(xsec.mass_ratio) + "\n")
-                elif xsec.type.name in {'EXCITATION', 'IONIZATION'}:
+                elif xsec.type in {CST.EXCITATION, CST.IONIZATION}:
                     fh.write(str(xsec.threshold) + "\n")
                 for key in xsec.info.keys():
                     fh.write(key + ": " + xsec.info[key] + "\n")
-                # create a 2-column table: 'energy' and 'values'
+                # create a 2-column table: "energy" and "values"
                 fh.write("-----------------------------\n")
-                xsec.data.to_csv(fh, sep='\t', index=False, header=False, chunksize=2,
-                                 float_format='%.6e', line_terminator='\n')
+                xsec.data.to_csv(fh, sep="\t", index=False, header=False, chunksize=2,
+                                 float_format="%.6e", line_terminator="\n")
                 fh.write("-----------------------------\n\n")
             fh.write("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n")
 
