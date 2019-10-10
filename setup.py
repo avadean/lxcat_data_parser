@@ -1,11 +1,11 @@
-import setuptools
+from setuptools import setup, find_packages
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 
-setuptools.setup(
-    name="hvl_lxcat_parser",
-    version="0.0.2",
+setup(
+    name="lxcat_data_parser",
+    version="0.1.0",
     author="Alise Chachereau",
     author_email="alisec@ethz.ch",
     description="A set of tools for importing data from the LXcat project.",
@@ -14,12 +14,12 @@ setuptools.setup(
         'Programming Language :: Python :: 3.7',
         'Topic :: Scientific/Engineering :: Physics'
     ],
-    packages=['hvl_lxcat_parser'],
+    packages=find_packages(),
     install_requires=[
         'pandas'
     ],
     license="GNU General Public License v3",
-    url="https://gitlab.ethz.ch/alisec/hvl_lxcat_parser/",
+    url="https://gitlab.com/ethz_hvl/lxcat_data_parser/",
     test_suite='tests',
     tests_require=['pytest', ],
 )

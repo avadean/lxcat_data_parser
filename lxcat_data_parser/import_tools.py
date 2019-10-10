@@ -3,6 +3,7 @@ from enum import IntEnum
 import logging
 import os
 import io
+from typing import Union
 
 
 # The different types of cross sections
@@ -23,12 +24,12 @@ class CrossSection:
     Attributes:
         cross_section_type: Type of collision, possible str/member of CrossSectionTypes
         species: name of the species as a str, example: N2
-        data: pandas DataFrame with columns 'energy' in eV and ''cross section' in m2
+        data: pandas DataFrame with columns 'energy' in eV and 'cross section' in m2
         mass_ratio: ratio of electron mass to atomic/molecular mass
         threshold: cross section threshold in eV
         info: optional additional information on the cross section given via kwargs"""
 
-    def __init__(self, cross_section_type: (str, CST), species: str,
+    def __init__(self, cross_section_type: Union[str, CST], species: str,
                  data: pd.DataFrame, mass_ratio: float = None,
                  threshold: float = None, **kwargs):
         if isinstance(cross_section_type, CST):
@@ -93,7 +94,7 @@ class CrossSectionSet:
 
     def __init__(self, input_file=None, imposed_species=None, imposed_database=None):
         """
-        Reads a set of cross section from a file.
+        Reads a set of cross sections from a file.
 
         By default, reads the first cross section set found in the input file but, if
         an imposed_species and/or an imposed_database are defined, reads the first cross

@@ -1,17 +1,17 @@
-hvl_lxcat_parser
+LXcat data parser
 ----------------
 
 A set of tools developed at the High Voltage Lab (HVL) of ETH Zurich, for reading/writing electron scattering cross sections data, in a format compatible with the LXcat project (www.lxcat.net).
 
 To load an electron scattering cross section set::
 
-	>>> import lxcat
-	>>> data = lxcat.CrossSectionSet('N2_data.txt')
+	>>> import lxcat_data_parser as ldp
+	>>> data = ldp.CrossSectionSet('N2_data.txt')
 
 The loaded set can be modified and saved again (here the ELASTIC cross section is multiplied by 10)::
 
 	>>> for cross_section in data.cross_sections:
-	>>>     if cross_section.type == lxcat.CrossSectionTypes.ELASTIC:
+	>>>     if cross_section.type == ldp.CrossSectionTypes.ELASTIC:
 	>>>         cross_section.data['cross section'] *= 10
 	>>> data.write('N2_data_rescaled.txt')
 

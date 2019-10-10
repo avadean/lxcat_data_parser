@@ -1,5 +1,9 @@
 
-from hvl_lxcat_parser import CrossSectionSet, CrossSectionTypes, CrossSectionReadingError
+from lxcat_data_parser import (
+    CrossSectionSet,
+    CrossSectionTypes,
+    CrossSectionReadingError,
+)
 import logging
 import pytest
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -40,7 +44,7 @@ def test_cross_section_set_output():
     assert data.species == 'CO2'
     assert data.cross_sections[0].type == CrossSectionTypes.ELASTIC
     assert len(data.cross_sections[1].data['energy']) == 3
-    assert data.cross_sections[0].info["PROCESS"] == 'Elastic collision'
+    assert data.cross_sections[0].info['PROCESS'] == 'Elastic collision'
     # test the equality of first cross sections
     assert data.cross_sections[0] == data2.cross_sections[0]
     # test the equality of cross section sets
