@@ -1,4 +1,4 @@
-Data printed using the package 'hvl_lxcat_parser', formatted  in accordance with the cross section data format of LXCat, www.lxcat.net.
+Data printed using the package 'lxcat_data_parser', formatted  in accordance with the cross section data format of LXCat, www.lxcat.net.
 
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 DATABASE: Dummy database
