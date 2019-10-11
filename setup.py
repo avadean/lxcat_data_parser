@@ -5,7 +5,7 @@ with open("README.rst") as readme_file:
 
 setup(
     name="lxcat_data_parser",
-    version="0.1.0",
+    version="0.1.1",
     author="Alise Chachereau",
     author_email="alisec@ethz.ch",
     description="A set of tools for importing data from the LXCat project.",
