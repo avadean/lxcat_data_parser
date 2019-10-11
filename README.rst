@@ -1,7 +1,7 @@
-LXcat data parser
+LXCat data parser
 =================
 
-A set of tools developed at `the High Voltage Lab (HVL) of ETH Zurich`_, for reading/writing electron scattering cross sections data, in a format compatible with `the LXcat project`_.
+A set of tools developed at `the High Voltage Lab (HVL) of ETH Zurich`_, for reading/writing electron scattering cross sections data, in a format compatible with `the LXCat project`_.
 
 Free software: GNU General Public License v3
 
@@ -28,7 +28,7 @@ The loaded set can be modified and saved again (here the ELASTIC cross section i
 Cross section data format
 -------------------------
 
-Description of the data format taken from `the LXcat project`_.
+Description of the data format taken from `the LXCat project`_.
 In downloaded files, each collision process is defined by a block consisting of:
 
 * 1st line: Keyword in capitals indicating the type of the collision. Possible collision types are ELASTIC, EFFECTIVE, EXCITATION, IONIZATION, or ATTACHMENT (capital letters required, key words are case sensitive), where "ELASTIC" is used to denote the elastic momentum transfer cross section and where "EFFECTIVE" denotes the total momentum transfer cross section (sum of elastic momentum transfer and total inelastic cross sections).  The latter is useful for solving the Boltzmann equation in the 2-term approximation.
@@ -42,4 +42,4 @@ In downloaded files, each collision process is defined by a block consisting of:
 * Finally: Table of the cross section as a function of energy. The table starts and ends by a line of dashes "------" (at least 5), and has otherwise two numbers per line: the energy in eV and the cross section in m2.
 
 .. _`the High Voltage Lab (HVL) of ETH Zurich`: https://hvl.ee.ethz.ch
-.. _`the LXcat project`: https://www.lxcat.net
+.. _`the LXCat project`: https://www.lxcat.net

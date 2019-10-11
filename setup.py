@@ -8,7 +8,7 @@ setup(
     version="0.1.0",
     author="Alise Chachereau",
     author_email="alisec@ethz.ch",
-    description="A set of tools for importing data from the LXcat project.",
+    description="A set of tools for importing data from the LXCat project.",
     long_description=readme,
     classifiers=[
         "Programming Language :: Python :: 3.7",

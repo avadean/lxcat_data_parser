@@ -99,7 +99,7 @@ class CrossSectionSet:
         By default, reads the first cross section set found in the input file but, if
         an imposed_species and/or an imposed_database are defined, reads the first cross
         section set of that species and/or that database found in the input file.
-        The input file should be compatible with the LXcat cross section data format.
+        The input file should be compatible with the LXCat cross section data format.
         """
 
         self.species = imposed_species
@@ -193,7 +193,7 @@ class CrossSectionSet:
     def write(self, output_file):
         """
         Writes the set of cross sections in a "*.txt" file under "input_file",
-        in an lxcat-compatible format.
+        in an LXCat-compatible format.
         """
         with open(output_file, "w") as fh:
             fh.write("Data printed using the package 'lxcat_data_parser', formatted "
@@ -241,6 +241,6 @@ class CrossSectionSet:
 class CrossSectionReadingError(Exception):
     """
     Error indicating a problem with the input file content. Check that the file
-    follows the LXcat cross section data format (see www.lxcat.net), and that the
+    follows the LXCat cross section data format (see www.lxcat.net), and that the
     species and/or database names are correct.
     """
