@@ -4,4 +4,6 @@ version = "0.1.0"
 description = "A set of tools developed at the High Voltage Lab (HVL) of ETH Zurich, for reading/writing electron scattering cross sections data, in a format compatible with the LXCat project."
 readme = "README.rst"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "pandas>=2.3.0",
+]
