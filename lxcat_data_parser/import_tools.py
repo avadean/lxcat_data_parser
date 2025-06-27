@@ -216,7 +216,7 @@ class CrossSectionSet:
                 # create a 2-column table: "energy" and "values"
                 fh.write("-----------------------------\n")
                 xsec.data.to_csv(fh, sep="\t", index=False, header=False, chunksize=2,
-                                 float_format="%.6e", line_terminator="\n")
+                                 float_format="%.6e", lineterminator="\n")
                 fh.write("-----------------------------\n\n")
             fh.write("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n")
 
